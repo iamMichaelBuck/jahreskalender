@@ -507,7 +507,7 @@ button {
   line-height: 1;
   color: var(--ink-muted);
   background: var(--surface);
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--line-week); /* same rule as under the month names */
 }
 
 /* ---------- Floating action button ---------- */
