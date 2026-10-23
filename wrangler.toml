@@ -5,6 +5,5 @@ pages_build_output_dir = "./dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "kalender-db"
-# Replace with the id printed by `npx wrangler d1 create kalender-db` before deploying.
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "d499ddc6-993d-490d-8444-0b7572c6746d"
 migrations_dir = "migrations"
