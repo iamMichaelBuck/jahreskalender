@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { CalendarDaysIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { CalendarDaysIcon, CalendarIcon, PlusIcon } from "@heroicons/react/24/outline";
 import type { Entry, EntryInput, IsoDate } from "../shared/entry";
 import { EntryDetails } from "./components/EntryDetails";
 import { EntryForm } from "./components/EntryForm";
@@ -114,10 +114,17 @@ export function App() {
           <span>Kalender</span>
         </h1>
         <div className="topbar__controls">
-          <YearPicker years={years} value={visibleYear} onChange={pickYear} />
-          <button type="button" className="btn btn--ghost btn--small" onClick={goToToday}>
-            Heute
+          <button
+            type="button"
+            className="btn btn--ghost btn--small today-btn"
+            onClick={goToToday}
+            title="Zum aktuellen Monat springen"
+            aria-label="Heute – zum aktuellen Monat springen"
+          >
+            <CalendarIcon aria-hidden="true" />
+            <span>Heute</span>
           </button>
+          <YearPicker years={years} value={visibleYear} onChange={pickYear} />
         </div>
       </header>
 

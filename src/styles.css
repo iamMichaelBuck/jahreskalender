@@ -118,6 +118,29 @@ button {
   gap: 8px;
 }
 
+.today-btn {
+  gap: 5px;
+}
+
+/* Phones: the icon alone would be ambiguous, so keep the word and drop the icon. */
+@media (max-width: 479px) {
+  .today-btn svg {
+    display: none;
+  }
+
+  .topbar {
+    gap: 8px;
+  }
+
+  .topbar__controls {
+    gap: 4px;
+  }
+
+  .segmented__item {
+    padding: 6px 8px;
+  }
+}
+
 /* Very small phones: the icon alone identifies the app. */
 @media (max-width: 374px) {
   .topbar__title span {
