@@ -54,7 +54,7 @@ As an alternative, connect the Git repo in the Cloudflare dashboard (build comma
 
 - **Dates** are stored as `YYYY-MM-DD` with no time. "Today" is computed in `Europe/Berlin`, whatever the visitor's device timezone is.
 - **Bars** take up the right two thirds of a day cell, so day numbers and weekend colors stay visible. Overlapping entries are split into lanes per month.
-- **Layout:** the current month is scrolled to the left edge on load. A spacer column after December makes this possible for every month.
-- **Years:** the picker runs from 2026 to max(2028, current year). To show more years, add Schulferien dates for them.
+- **Layout:** all years form one continuous row of months (Dezember 2026 → Januar 2027 → …), and each month header shows its year. The current month is scrolled to the left edge on load. A spacer column after the last month makes this possible for every month.
+- **Years:** the timeline runs from 2026 to max(2028, current year). The year picker jumps to January of a year and highlights the year of the leftmost visible month. To show more years, add Schulferien dates for them.
 - **Validation** runs in `shared/entry.ts` on both client and server: name 1–80 characters, preset colors only, end ≥ start, at most 366 days.
 - **No abuse protection yet.** The write API is public by design. Before sharing the URL widely, consider a Cloudflare WAF rate-limiting rule on `/api/*` (available on the free plan).

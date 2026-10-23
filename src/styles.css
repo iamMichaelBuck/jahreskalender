@@ -217,7 +217,7 @@ button {
    can be scrolled to the left edge. */
 .calendar__grid {
   display: grid;
-  grid-template-columns: repeat(12, var(--col-w)) max(0px, calc(100vw - var(--col-w)));
+  grid-template-columns: repeat(var(--months), var(--col-w)) max(0px, calc(100vw - var(--col-w)));
   width: max-content;
   background: var(--surface);
 }
@@ -272,6 +272,18 @@ button {
   letter-spacing: -0.005em;
   background: var(--surface);
   border-bottom: 1px solid var(--line-week);
+}
+
+.month__year {
+  margin-left: 0.3em;
+  font-weight: 500;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Year boundary in the continuous timeline. */
+.month--new-year:not(:first-child) {
+  border-left: 2px solid var(--line-week);
 }
 
 .month__body {

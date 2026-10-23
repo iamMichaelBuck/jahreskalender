@@ -56,8 +56,14 @@ export const MonthColumn = memo(function MonthColumn({ year, month, today, entri
   }
 
   return (
-    <section className="month" aria-label={`${MONTH_NAMES[month]} ${year}`} data-month={month}>
-      <h2 className="month__title">{MONTH_NAMES[month]}</h2>
+    <section
+      className={`month${month === 0 ? " month--new-year" : ""}`}
+      aria-label={`${MONTH_NAMES[month]} ${year}`}
+      data-month={`${year}-${month}`}
+    >
+      <h2 className="month__title">
+        {MONTH_NAMES[month]} <span className="month__year">{year}</span>
+      </h2>
       <div className="month__body">
         {cells}
         <div className="bars" style={{ "--lanes": Math.max(laneCount, 1) } as CSSProperties}>

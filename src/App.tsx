@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ArrowRightIcon, CalendarDaysIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { CalendarDaysIcon, PlusIcon } from "@heroicons/react/24/outline";
 import type { Entry, EntryInput, IsoDate } from "../shared/entry";
 import { EntryDetails } from "./components/EntryDetails";
 import { EntryForm } from "./components/EntryForm";
@@ -34,52 +34,51 @@ export function App() {
   const lastYear = Math.max(MIN_LAST_YEAR, current.year);
   const years = Array.from({ length: lastYear - FIRST_YEAR + 1 }, (_, i) => FIRST_YEAR + i);
 
-  const [year, setYear] = useState(() => Math.min(Math.max(current.year, FIRST_YEAR), lastYear));
-  const { entries, loading, error, reload, create, update, remove } = useEntries(year);
+  // All years run as one continuous row of months: Dezember 2026 is followed by Januar 2027.
+  const timeline = useMemo(
+    () => years.flatMap((year) => MONTHS.map((month) => ({ year, month }))),
+    // `years` is derived from `lastYear` alone.
+    [lastYear],
+  );
+  const { entries, loading, error, reload, create, update, remove } = useEntries(`${FIRST_YEAR}-01-01`, `${lastYear}-12-31`);
+  const [visibleYear, setVisibleYear] = useState(() => Math.min(Math.max(current.year, FIRST_YEAR), lastYear));
   const [panel, setPanel] = useState<Panel>(null);
   const scroller = useRef<HTMLDivElement>(null);
 
-  /** Puts `month` at the left edge; optionally brings `date` into view vertically. */
-  const scrollToMonth = useCallback((month: number, date?: IsoDate, behavior: ScrollBehavior = "auto") => {
+  /** Puts the month at the left edge; with `date`, also brings that day into view vertically. */
+  const scrollToMonth = useCallback((year: number, month: number, date?: IsoDate, behavior: ScrollBehavior = "auto") => {
     const el = scroller.current;
-    const column = el?.querySelector<HTMLElement>(`[data-month="${month}"]`);
+    const column = el?.querySelector<HTMLElement>(`[data-month="${year}-${month}"]`);
     if (!el || !column) return;
-    let top = 0;
     const cell = date ? column.querySelector<HTMLElement>(`[data-date="${date}"]`) : null;
-    if (cell) {
-      const rowHeight = cell.offsetHeight;
-      // Leave a few days of context above today, below the sticky month header.
-      top = Math.max(0, cell.offsetTop - rowHeight * 3);
-    }
+    // Leave a few days of context above the target day, below the sticky month header.
+    const top = cell ? Math.max(0, cell.offsetTop - cell.offsetHeight * 3) : undefined;
     el.scrollTo({ left: column.offsetLeft, top, behavior });
   }, []);
 
-  // On first load and on every year switch: current month leftmost (current year) or January.
-  // Today's row is also scrolled into view on first load and after "Heute", not on manual year picks.
-  const revealTodayIn = useRef<number | null>(current.year);
+  // First load: current month leftmost, today's row in view.
   useLayoutEffect(() => {
-    if (year === current.year) scrollToMonth(current.month, revealTodayIn.current === year ? today : undefined);
-    else scrollToMonth(0);
-    // Only re-run on year changes, not when `today` ticks over.
-  }, [year]);
+    scrollToMonth(current.year, current.month, today);
+  }, []);
 
-  const pickYear = (next: number) => {
-    revealTodayIn.current = null;
-    setYear(next);
-  };
+  // The year picker follows the year of the leftmost visible month.
+  const onScroll = useCallback(() => {
+    const el = scroller.current;
+    const colWidth = el?.querySelector<HTMLElement>(".month")?.offsetWidth;
+    if (!el || !colWidth) return;
+    const index = Math.min(timeline.length - 1, Math.floor((el.scrollLeft + colWidth / 2) / colWidth));
+    setVisibleYear(timeline[index].year);
+  }, [timeline]);
 
-  const goToToday = () => {
-    revealTodayIn.current = current.year;
-    if (year !== current.year) setYear(current.year);
-    else scrollToMonth(current.month, today, "smooth");
-  };
+  const pickYear = (year: number) => scrollToMonth(year, 0, undefined, "smooth");
+  const goToToday = () => scrollToMonth(current.year, current.month, today, "smooth");
 
   const openCreate = useCallback(
     (date?: IsoDate) => {
-      const start = date ?? (year === current.year ? today : `${year}-01-01`);
+      const start = date ?? today;
       setPanel({ kind: "create", initial: { name: "", color: "terracotta", start, end: start } });
     },
-    [year, current.year, today],
+    [today],
   );
   const openEntry = useCallback((entry: Entry) => setPanel({ kind: "view", entry }), []);
   const close = () => setPanel(null);
@@ -92,7 +91,7 @@ export function App() {
           <span>Kalender</span>
         </h1>
         <div className="topbar__controls">
-          <YearPicker years={years} value={year} onChange={pickYear} />
+          <YearPicker years={years} value={visibleYear} onChange={pickYear} />
           <button type="button" className="btn btn--ghost btn--small" onClick={goToToday}>
             Heute
           </button>
@@ -120,9 +119,9 @@ export function App() {
         </div>
       )}
 
-      <main className="calendar" ref={scroller} aria-label={`Kalender ${year}`}>
-        <div className="calendar__grid">
-          {MONTHS.map((month) => (
+      <main className="calendar" ref={scroller} onScroll={onScroll} aria-label={`Kalender ${FIRST_YEAR}–${lastYear}`}>
+        <div className="calendar__grid" style={{ "--months": timeline.length } as CSSProperties}>
+          {timeline.map(({ year, month }) => (
             <MonthColumn
               key={`${year}-${month}`}
               year={year}
@@ -134,13 +133,7 @@ export function App() {
             />
           ))}
           <div className="year-end">
-            <p className="year-end__text">Ende {year}</p>
-            {years.includes(year + 1) && (
-              <button type="button" className="btn btn--ghost btn--small" onClick={() => pickYear(year + 1)}>
-                {year + 1} anzeigen
-                <ArrowRightIcon aria-hidden="true" />
-              </button>
-            )}
+            <p className="year-end__text">Ende {lastYear}</p>
           </div>
         </div>
       </main>

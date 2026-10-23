@@ -1,25 +1,25 @@
 import { useCallback, useEffect, useState } from "react";
-import type { Entry, EntryInput } from "../../shared/entry";
+import type { Entry, EntryInput, IsoDate } from "../../shared/entry";
 import { api } from "./api";
 
 const byStart = (a: Entry, b: Entry) => a.start.localeCompare(b.start) || b.end.localeCompare(a.end);
 
-/** Loads all entries touching the given year and keeps them in sync after edits. */
-export function useEntries(year: number) {
+/** Loads all entries touching [from, to] and keeps them in sync after edits. */
+export function useEntries(from: IsoDate, to: IsoDate) {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
     try {
-      setEntries((await api.listEntries(`${year}-01-01`, `${year}-12-31`)).sort(byStart));
+      setEntries((await api.listEntries(from, to)).sort(byStart));
       setError(null);
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setLoading(false);
     }
-  }, [year]);
+  }, [from, to]);
 
   useEffect(() => {
     setLoading(true);
