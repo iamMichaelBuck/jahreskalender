@@ -171,6 +171,8 @@ export function App() {
         </div>
       </main>
 
+      <footer className="footer">hallo internet</footer>
+
       <button type="button" className="fab" onClick={() => openCreate()} aria-label="Neuer Eintrag">
         <PlusIcon aria-hidden="true" />
       </button>
