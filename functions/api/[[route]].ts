@@ -22,7 +22,44 @@ const toEntry = (row: EntryRow): Entry => ({
 
 const app = new Hono<{ Bindings: Bindings }>().basePath("/api");
 
-// Entries overlapping [from, to]. The client asks for one calendar year at a time.
+// The calendar is public, so writes are capped per visitor: fixed windows counted in D1.
+// (WAF rate-limiting rules need a custom domain; they don't apply to *.pages.dev.)
+const WRITE_LIMIT = 60;
+const WINDOW_SECONDS = 10 * 60;
+
+async function sha256Hex(text: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+app.on(["POST", "PUT", "DELETE"], ["/entries", "/entries/*"], async (c, next) => {
+  const now = Math.floor(Date.now() / 1000);
+  const windowStart = now - (now % WINDOW_SECONDS);
+  const ip = c.req.header("CF-Connecting-IP") ?? "unknown";
+  const key = await sha256Hex(`${ip}|${windowStart}`);
+
+  const row = await c.env.DB.prepare(
+    "INSERT INTO rate_limits (key, window_start, count) VALUES (?1, ?2, 1) ON CONFLICT (key, window_start) DO UPDATE SET count = count + 1 RETURNING count",
+  )
+    .bind(key, windowStart)
+    .first<{ count: number }>();
+  const count = row?.count ?? 1;
+
+  // First write of this visitor in a new window: a cheap moment to drop expired windows.
+  if (count === 1) {
+    c.executionCtx.waitUntil(c.env.DB.prepare("DELETE FROM rate_limits WHERE window_start < ?1").bind(windowStart).run());
+  }
+
+  if (count > WRITE_LIMIT) {
+    const retryAfter = windowStart + WINDOW_SECONDS - now;
+    c.header("Retry-After", String(retryAfter));
+    const minutes = Math.max(1, Math.ceil(retryAfter / 60));
+    return c.json({ error: `Zu viele Änderungen. Bitte in ${minutes} ${minutes === 1 ? "Minute" : "Minuten"} erneut versuchen.` }, 429);
+  }
+  await next();
+});
+
+// Entries overlapping [from, to]. The client asks for the whole visible timeline at once.
 app.get("/entries", async (c) => {
   const from = c.req.query("from");
   const to = c.req.query("to");
