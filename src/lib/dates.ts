@@ -28,6 +28,12 @@ export function parseIso(date: IsoDate): { year: number; month: number; day: num
 
 export const daysInMonth = (year: number, month: number) => new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
 
+export function addDays(date: IsoDate, days: number): IsoDate {
+  const d = new Date(`${date}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
 /** 0 = Sonntag … 6 = Samstag. All date math runs in UTC so DST never shifts a day. */
 export const weekday = (year: number, month: number, day: number) => new Date(Date.UTC(year, month, day)).getUTCDay();
 

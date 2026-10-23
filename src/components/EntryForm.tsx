@@ -1,6 +1,7 @@
 import { useState, type CSSProperties, type FormEvent } from "react";
 import { CheckIcon } from "@heroicons/react/20/solid";
 import { ENTRY_COLORS, NAME_MAX_LENGTH, dayCount, validateEntryInput, type EntryColorId, type EntryInput } from "../../shared/entry";
+import { addDays } from "../lib/dates";
 
 interface Props {
   initial: EntryInput;
@@ -18,9 +19,9 @@ export function EntryForm({ initial, submitLabel, onSubmit, onCancel }: Props) {
   const [saving, setSaving] = useState(false);
 
   const changeStart = (value: string) => {
+    // Moving the start past the end shifts the whole range, keeping its length.
+    if (value && start && end && value > end) setEnd(addDays(value, dayCount(start, end) - 1));
     setStart(value);
-    // Keep the range valid while the user moves the start forward.
-    if (value && end && value > end) setEnd(value);
   };
 
   const submit = async (e: FormEvent) => {

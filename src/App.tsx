@@ -6,7 +6,7 @@ import { EntryForm } from "./components/EntryForm";
 import { MonthColumn } from "./components/MonthColumn";
 import { Sheet } from "./components/Sheet";
 import { YearPicker } from "./components/YearPicker";
-import { parseIso, todayInGermany } from "./lib/dates";
+import { addDays, parseIso, todayInGermany } from "./lib/dates";
 import { useDragScroll } from "./lib/useDragScroll";
 import { useEntries } from "./lib/useEntries";
 
@@ -17,6 +17,8 @@ const DAY_ROWS = 31;
 const MIN_ROW_HEIGHT = 20;
 /** Rows at least this tall have room for the Schulferien label under the day number. */
 const ROOMY_ROW_HEIGHT = 30;
+/** New entries span this many days until the user changes the dates. */
+const DEFAULT_ENTRY_DAYS = 2;
 
 type Panel =
   | { kind: "create"; initial: EntryInput }
@@ -99,7 +101,8 @@ export function App() {
   const openCreate = useCallback(
     (date?: IsoDate) => {
       const start = date ?? today;
-      setPanel({ kind: "create", initial: { name: "", color: "terracotta", start, end: start } });
+      const end = addDays(start, DEFAULT_ENTRY_DAYS - 1);
+      setPanel({ kind: "create", initial: { name: "", color: "terracotta", start, end } });
     },
     [today],
   );
