@@ -12,6 +12,10 @@ import { useEntries } from "./lib/useEntries";
 const FIRST_YEAR = 2026;
 const MIN_LAST_YEAR = 2028;
 const MONTHS = Array.from({ length: 12 }, (_, i) => i);
+const DAY_ROWS = 31;
+const MIN_ROW_HEIGHT = 20;
+/** Rows at least this tall have room for the Schulferien label under the day number. */
+const ROOMY_ROW_HEIGHT = 30;
 
 type Panel =
   | { kind: "create"; initial: EntryInput }
@@ -54,6 +58,23 @@ export function App() {
     // Leave a few days of context above the target day, below the sticky month header.
     const top = cell ? Math.max(0, cell.offsetTop - cell.offsetHeight * 3) : undefined;
     el.scrollTo({ left: column.offsetLeft, top, behavior });
+  }, []);
+
+  // Day rows stretch so all 31 days fill the available height on any device.
+  // Only below MIN_ROW_HEIGHT (e.g. phones in landscape) does the calendar scroll vertically.
+  useLayoutEffect(() => {
+    const el = scroller.current;
+    if (!el) return;
+    const fit = () => {
+      const header = el.querySelector<HTMLElement>(".month__title")?.offsetHeight ?? 0;
+      const row = Math.max(MIN_ROW_HEIGHT, (el.clientHeight - header) / DAY_ROWS);
+      el.style.setProperty("--row-h", `${row}px`);
+      el.classList.toggle("calendar--compact", row < ROOMY_ROW_HEIGHT);
+    };
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   // First load: current month leftmost, today's row in view.

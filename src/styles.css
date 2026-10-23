@@ -27,8 +27,9 @@
   --shadow-sm: 0 1px 2px rgb(59 49 40 / 0.08);
   --shadow-lg: 0 12px 32px rgb(59 49 40 / 0.18), 0 2px 6px rgb(59 49 40 / 0.08);
 
-  /* Calendar geometry. Phones: ~2.4 month columns visible so the next one peeks in. */
-  --row-h: 36px;
+  /* Calendar geometry. Phones: ~2.4 month columns visible so the next one peeks in.
+     --row-h is overridden at runtime so the 31 rows fill the screen height (see App.tsx). */
+  --row-h: 30px;
   --col-w: max(136px, calc((100vw - 4px) / 2.4));
   --header-h: 40px;
 
@@ -38,12 +39,6 @@
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
   -webkit-text-size-adjust: 100%;
-}
-
-@media (min-width: 900px) {
-  :root {
-    --row-h: 30px;
-  }
 }
 
 *,
@@ -210,7 +205,6 @@ button {
   overflow: auto;
   overscroll-behavior: contain;
   scroll-snap-type: x proximity;
-  padding-bottom: calc(96px + env(safe-area-inset-bottom)); /* keep the last days clear of the FAB */
 }
 
 /* The tail column after December is wide enough that any month, even December,
@@ -370,6 +364,15 @@ button {
   letter-spacing: 0.01em;
   color: var(--holiday-ink);
   white-space: nowrap;
+}
+
+/* Short rows: tint, stripe and legend still mark the Schulferien; the name lives in the aria-label. */
+.calendar--compact .day__holiday {
+  display: none;
+}
+
+.calendar--compact .day {
+  padding-top: 1px;
 }
 
 /* ---------- Entry bars ---------- */

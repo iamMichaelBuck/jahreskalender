@@ -53,6 +53,7 @@ As an alternative, connect the Git repo in the Cloudflare dashboard (build comma
 ## Behaviour notes
 
 - **Dates** are stored as `YYYY-MM-DD` with no time. "Today" is computed in `Europe/Berlin`, whatever the visitor's device timezone is.
+- **Height:** the 31 day rows stretch to fill the screen height on every device. A `ResizeObserver` in `App.tsx` sets `--row-h`. The calendar only scrolls vertically when rows would get shorter than 20px (e.g. phones in landscape). When rows are shorter than 30px, the Schulferien name label is hidden, but the tint and stripe stay.
 - **Bars** take up the right two thirds of a day cell, so day numbers and weekend colors stay visible. Overlapping entries are split into lanes per month.
 - **Layout:** all years form one continuous row of months (Dezember 2026 → Januar 2027 → …), and each month header shows its year. The current month is scrolled to the left edge on load. A spacer column after the last month makes this possible for every month.
 - **Years:** the timeline runs from 2026 to max(2028, current year). The year picker jumps to January of a year and highlights the year of the leftmost visible month. To show more years, add Schulferien dates for them.
