@@ -7,6 +7,7 @@ import { MonthColumn } from "./components/MonthColumn";
 import { Sheet } from "./components/Sheet";
 import { YearPicker } from "./components/YearPicker";
 import { parseIso, todayInGermany } from "./lib/dates";
+import { useDragScroll } from "./lib/useDragScroll";
 import { useEntries } from "./lib/useEntries";
 
 const FIRST_YEAR = 2026;
@@ -48,6 +49,7 @@ export function App() {
   const [visibleYear, setVisibleYear] = useState(() => Math.min(Math.max(current.year, FIRST_YEAR), lastYear));
   const [panel, setPanel] = useState<Panel>(null);
   const scroller = useRef<HTMLDivElement>(null);
+  useDragScroll(scroller);
 
   /** Puts the month at the left edge; with `date`, also brings that day into view vertically. */
   const scrollToMonth = useCallback((year: number, month: number, date?: IsoDate, behavior: ScrollBehavior = "auto") => {

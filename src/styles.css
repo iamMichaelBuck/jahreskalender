@@ -216,6 +216,27 @@ button {
   background: var(--surface);
 }
 
+/* Mouse users drag the calendar sideways (see useDragScroll). */
+@media (hover: hover) and (pointer: fine) {
+  .calendar {
+    user-select: none;
+  }
+
+  .calendar .day {
+    cursor: grab;
+  }
+
+  .calendar.is-dragging,
+  .calendar.is-dragging * {
+    cursor: grabbing;
+  }
+
+  /* Follow the mouse freely; snapping resumes on release. */
+  .calendar.is-dragging {
+    scroll-snap-type: none;
+  }
+}
+
 @media (min-width: 900px) {
   :root {
     --col-w: clamp(140px, calc((100vw - 4px) / 7), 210px);
