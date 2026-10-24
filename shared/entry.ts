@@ -27,6 +27,12 @@ export const ENTRY_COLORS = [
 
 export type EntryColorId = (typeof ENTRY_COLORS)[number]["id"];
 
+/** One-tap event names offered above the custom name field, each with its own color. */
+export const ENTRY_PRESETS = [
+  { name: "Gate", color: "dusk" },
+  { name: "Nat", color: "plum" },
+] as const satisfies readonly { name: string; color: EntryColorId }[];
+
 export const NAME_MAX_LENGTH = 80;
 /** Upper bound for a single entry, mostly to keep junk out of the public DB. */
 export const MAX_RANGE_DAYS = 366;

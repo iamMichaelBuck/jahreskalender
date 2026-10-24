@@ -1,6 +1,14 @@
-import { useState, type CSSProperties, type FormEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { CheckIcon } from "@heroicons/react/20/solid";
-import { ENTRY_COLORS, NAME_MAX_LENGTH, dayCount, validateEntryInput, type EntryColorId, type EntryInput } from "../../shared/entry";
+import {
+  ENTRY_COLORS,
+  ENTRY_PRESETS,
+  NAME_MAX_LENGTH,
+  dayCount,
+  validateEntryInput,
+  type EntryColorId,
+  type EntryInput,
+} from "../../shared/entry";
 import { addDays } from "../lib/dates";
 
 interface Props {
@@ -10,13 +18,41 @@ interface Props {
   onCancel: () => void;
 }
 
+/** A preset name ("Gate", "Nat"), "custom" for a typed name, or null before the user picks. */
+type NameChoice = (typeof ENTRY_PRESETS)[number]["name"] | "custom" | null;
+
+const colorHex = (id: EntryColorId) => ENTRY_COLORS.find((c) => c.id === id)!.hex;
+
+function initialChoice(name: string): NameChoice {
+  const preset = ENTRY_PRESETS.find((p) => p.name === name);
+  if (preset) return preset.name;
+  return name ? "custom" : null;
+}
+
 export function EntryForm({ initial, submitLabel, onSubmit, onCancel }: Props) {
-  const [name, setName] = useState(initial.name);
+  const [choice, setChoice] = useState<NameChoice>(() => initialChoice(initial.name));
+  const [customName, setCustomName] = useState(() => (initialChoice(initial.name) === "custom" ? initial.name : ""));
   const [color, setColor] = useState<EntryColorId>(initial.color);
   const [start, setStart] = useState(initial.start);
   const [end, setEnd] = useState(initial.end);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const customInput = useRef<HTMLInputElement>(null);
+
+  // Opening "Eigener Name" goes straight to typing.
+  const focusCustom = useRef(false);
+  useEffect(() => {
+    if (choice === "custom" && focusCustom.current) customInput.current?.focus();
+    focusCustom.current = false;
+  }, [choice]);
+
+  const pick = (next: NonNullable<NameChoice>) => {
+    setChoice(next);
+    setError(null);
+    const preset = ENTRY_PRESETS.find((p) => p.name === next);
+    if (preset) setColor(preset.color);
+    else focusCustom.current = true;
+  };
 
   const changeStart = (value: string) => {
     // Moving the start past the end shifts the whole range, keeping its length.
@@ -26,6 +62,8 @@ export function EntryForm({ initial, submitLabel, onSubmit, onCancel }: Props) {
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    if (!choice) return setError("Bitte Gate, Nat oder einen eigenen Namen wählen.");
+    const name = choice === "custom" ? customName : choice;
     const parsed = validateEntryInput({ name, color, start, end });
     if (!parsed.ok) return setError(parsed.error);
     setSaving(true);
@@ -42,20 +80,50 @@ export function EntryForm({ initial, submitLabel, onSubmit, onCancel }: Props) {
 
   return (
     <form className="form" onSubmit={submit} noValidate>
-      <label className="field">
-        <span className="field__label">Name</span>
-        <input
-          className="input"
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          maxLength={NAME_MAX_LENGTH}
-          placeholder="z. B. Urlaub Gardasee"
-          autoComplete="off"
-          enterKeyHint="done"
-          required
-        />
-      </label>
+      <fieldset className="field">
+        <legend className="field__label">Name</legend>
+        <div className="choices" role="radiogroup" aria-label="Name">
+          {ENTRY_PRESETS.map((p) => (
+            <label key={p.name} className="choice" style={{ "--choice": colorHex(p.color) } as CSSProperties}>
+              <input
+                type="radio"
+                name="name-choice"
+                value={p.name}
+                checked={choice === p.name}
+                onChange={() => pick(p.name)}
+                aria-label={p.name}
+              />
+              <span className="choice__dot" aria-hidden="true" />
+              {p.name}
+            </label>
+          ))}
+          <label className="choice choice--custom">
+            <input
+              type="radio"
+              name="name-choice"
+              value="custom"
+              checked={choice === "custom"}
+              onChange={() => pick("custom")}
+              aria-label="Eigener Name"
+            />
+            Eigener Name
+          </label>
+        </div>
+        {choice === "custom" && (
+          <input
+            ref={customInput}
+            className="input"
+            type="text"
+            value={customName}
+            onChange={(e) => setCustomName(e.target.value)}
+            maxLength={NAME_MAX_LENGTH}
+            placeholder="z. B. Urlaub Gardasee"
+            aria-label="Eigener Name"
+            autoComplete="off"
+            enterKeyHint="done"
+          />
+        )}
+      </fieldset>
 
       <fieldset className="field">
         <legend className="field__label">Farbe</legend>

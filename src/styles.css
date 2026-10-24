@@ -758,6 +758,79 @@ button {
   text-align: left;
 }
 
+/* Name choice: Gate and Nat as big one-tap tiles, the custom option as a full-width row below. */
+.choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.choice {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 56px;
+  padding: 0 12px;
+  border: 1.5px solid var(--line-week);
+  border-radius: var(--radius);
+  background: #fff;
+  font-size: 17px;
+  font-weight: 650;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.choice input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.choice__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--choice);
+}
+
+.choice:has(input:checked) {
+  border-color: var(--choice);
+  background: var(--choice);
+  color: #fff;
+}
+
+.choice:has(input:checked) .choice__dot {
+  background: #fff;
+}
+
+.choice:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.choice:active {
+  transform: scale(0.98);
+}
+
+.choice--custom {
+  --choice: var(--ink);
+  grid-column: 1 / -1;
+  min-height: 44px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+@media (hover: hover) {
+  .choice:not(:has(input:checked)):hover {
+    border-color: var(--choice, var(--ink-soft));
+  }
+}
+
 .swatches {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
